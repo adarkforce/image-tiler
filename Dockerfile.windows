@@ -18,7 +18,7 @@ WORKDIR /build
 # Download pre-built vips for Windows
 RUN wget https://github.com/libvips/build-win64-mxe/releases/download/v8.15.2/vips-dev-w64-all-8.15.2.zip && \
     unzip vips-dev-w64-all-8.15.2.zip && \
-    mv vips-dev-8.15.2 /opt/vips
+    mv vips-dev-8.15 /opt/vips
 
 # Set up environment
 ENV PKG_CONFIG_PATH=/opt/vips/lib/pkgconfig

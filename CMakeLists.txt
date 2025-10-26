@@ -19,7 +19,11 @@ include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 if(WIN32 AND DEFINED VIPS_INCLUDE_DIR AND DEFINED VIPS_LIBRARY_DIR)
     # Manual configuration for Windows cross-compilation
     add_library(vips INTERFACE)
-    target_include_directories(vips INTERFACE ${VIPS_INCLUDE_DIR})
+    target_include_directories(vips INTERFACE 
+        ${VIPS_INCLUDE_DIR}
+        ${VIPS_INCLUDE_DIR}/glib-2.0
+        ${VIPS_LIBRARY_DIR}/glib-2.0/include
+    )
     target_link_directories(vips INTERFACE ${VIPS_LIBRARY_DIR})
     target_link_libraries(vips INTERFACE vips-cpp-42 vips-42 glib-2.0 gobject-2.0)
 else()

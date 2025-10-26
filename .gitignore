@@ -1,0 +1,14 @@
+build/
+build-windows/
+cmake-build-*/
+.cache/
+compile_commands.json
+deps-windows/
+windows-portable/
+*.zip
+test_images/
+test_outputs/
+.DS_Store
+*.swp
+*.swo
+*~

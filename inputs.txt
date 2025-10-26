@@ -1,0 +1,3 @@
+/Users/antoniodellafortuna/image-tier/test_images/image_1.jpg
+/Users/antoniodellafortuna/image-tier/test_images/image_2.jpg
+/Users/antoniodellafortuna/image-tier/test_images/image_3.jpg

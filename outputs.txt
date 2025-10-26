@@ -1,0 +1,3 @@
+/Users/antoniodellafortuna/image-tier/test_outputs/output_1
+/Users/antoniodellafortuna/image-tier/test_outputs/output_2
+/Users/antoniodellafortuna/image-tier/test_outputs/output_3

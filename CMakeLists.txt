@@ -25,7 +25,19 @@ if(WIN32 AND DEFINED VIPS_INCLUDE_DIR AND DEFINED VIPS_LIBRARY_DIR)
         ${VIPS_LIBRARY_DIR}/glib-2.0/include
     )
     target_link_directories(vips INTERFACE ${VIPS_LIBRARY_DIR})
-    target_link_libraries(vips INTERFACE vips-cpp-42 vips-42 glib-2.0 gobject-2.0)
+    
+    # Find the actual library files
+    find_library(VIPS_CPP_LIB NAMES vips-cpp libvips-cpp PATHS ${VIPS_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(VIPS_LIB NAMES vips libvips PATHS ${VIPS_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(GLIB_LIB NAMES glib-2.0 libglib-2.0 PATHS ${VIPS_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(GOBJECT_LIB NAMES gobject-2.0 libgobject-2.0 PATHS ${VIPS_LIBRARY_DIR} NO_DEFAULT_PATH)
+    
+    if(VIPS_CPP_LIB AND VIPS_LIB)
+        target_link_libraries(vips INTERFACE ${VIPS_CPP_LIB} ${VIPS_LIB} ${GLIB_LIB} ${GOBJECT_LIB})
+    else()
+        # Fallback to direct library names
+        target_link_libraries(vips INTERFACE vips-cpp vips glib-2.0 gobject-2.0)
+    endif()
 else()
     # Use pkg-config for native builds
     find_package(PkgConfig REQUIRED)

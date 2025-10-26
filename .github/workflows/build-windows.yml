@@ -35,6 +35,10 @@ jobs:
           mkdir -p /c/vips
           cp -r vips-dev-8.15/* /c/vips/
 
+          # List library files to see what's available
+          echo "=== Available libraries in C:/vips/lib ==="
+          ls -la /c/vips/lib/*.a | head -20
+
       - name: Configure CMake
         shell: msys2 {0}
         run: |
@@ -43,12 +47,13 @@ jobs:
             -DVIPS_INCLUDE_DIR=/c/vips/include \
             -DVIPS_LIBRARY_DIR=/c/vips/lib \
             -DZLIB_INCLUDE_DIR=/mingw64/include \
-            -DZLIB_LIBRARY=/mingw64/lib/libz.dll.a
+            -DZLIB_LIBRARY=/mingw64/lib/libz.dll.a \
+            -DCMAKE_VERBOSE_MAKEFILE=ON
 
       - name: Build
         shell: msys2 {0}
         run: |
-          cmake --build build
+          cmake --build build --verbose
 
       - name: List build output
         shell: msys2 {0}

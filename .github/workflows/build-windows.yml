@@ -14,41 +14,56 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download libvips
-        run: |
-          $vipsVersion = "8.15.2"
-          $vipsUrl = "https://github.com/libvips/build-win64-mxe/releases/download/v$vipsVersion/vips-dev-w64-all-$vipsVersion.zip"
-          Invoke-WebRequest -Uri $vipsUrl -OutFile vips.zip
-          Expand-Archive -Path vips.zip -DestinationPath .
-          Move-Item vips-dev-8.15 C:\vips
+      - name: Setup MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-zlib
+            make
 
-      - name: Setup environment
+      - name: Download libvips
+        shell: msys2 {0}
         run: |
-          echo "C:\vips\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          curl -L https://github.com/libvips/build-win64-mxe/releases/download/v8.15.2/vips-dev-w64-all-8.15.2.zip -o vips.zip
+          unzip -q vips.zip
+          mv vips-dev-8.15 /c/vips
 
       - name: Configure CMake
+        shell: msys2 {0}
         run: |
-          cmake -B build -S . `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DVIPS_INCLUDE_DIR=C:/vips/include `
-            -DVIPS_LIBRARY_DIR=C:/vips/lib `
-            -DZLIB_INCLUDE_DIR=C:/vips/include `
-            -DZLIB_LIBRARY=C:/vips/lib/libz.dll.a
+          cmake -G Ninja -B build -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVIPS_INCLUDE_DIR=/c/vips/include \
+            -DVIPS_LIBRARY_DIR=/c/vips/lib \
+            -DZLIB_INCLUDE_DIR=/mingw64/include \
+            -DZLIB_LIBRARY=/mingw64/lib/libz.dll.a
 
       - name: Build
+        shell: msys2 {0}
         run: |
-          cmake --build build --config Release
+          cmake --build build
 
       - name: Package
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release
-          Copy-Item build/Release/MyProject.exe release/
+          Copy-Item build/MyProject.exe release/
           Copy-Item README.md release/
           Copy-Item inputs.txt release/
           Copy-Item outputs.txt release/
 
-          # Copy required DLLs
+          # Copy vips DLLs
           Copy-Item C:\vips\bin\*.dll release\
+
+          # Copy MinGW runtime DLLs
+          Copy-Item C:\msys64\mingw64\bin\libgcc_s_seh-1.dll release\
+          Copy-Item C:\msys64\mingw64\bin\libstdc++-6.dll release\
+          Copy-Item C:\msys64\mingw64\bin\libwinpthread-1.dll release\
 
       - name: Create ZIP
         run: |

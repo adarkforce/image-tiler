@@ -24,14 +24,16 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-zlib
-            make
+            unzip
+            curl
 
-      - name: Download libvips
+      - name: Download and extract libvips
         shell: msys2 {0}
         run: |
           curl -L https://github.com/libvips/build-win64-mxe/releases/download/v8.15.2/vips-dev-w64-all-8.15.2.zip -o vips.zip
           unzip -q vips.zip
-          mv vips-dev-8.15 /c/vips
+          mkdir -p /c/vips
+          cp -r vips-dev-8.15/* /c/vips/
 
       - name: Configure CMake
         shell: msys2 {0}
@@ -48,22 +50,50 @@ jobs:
         run: |
           cmake --build build
 
+      - name: List build output
+        shell: msys2 {0}
+        run: |
+          ls -la build/
+          file build/MyProject.exe || echo "MyProject.exe not found"
+
       - name: Package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release
-          Copy-Item build/MyProject.exe release/
+
+          # Copy executable
+          if (Test-Path "build/MyProject.exe") {
+            Copy-Item build/MyProject.exe release/
+          } else {
+            Write-Error "MyProject.exe not found!"
+            exit 1
+          }
+
           Copy-Item README.md release/
           Copy-Item inputs.txt release/
           Copy-Item outputs.txt release/
 
           # Copy vips DLLs
-          Copy-Item C:\vips\bin\*.dll release\
+          if (Test-Path "C:\vips\bin") {
+            Copy-Item C:\vips\bin\*.dll release\ -ErrorAction SilentlyContinue
+          }
 
           # Copy MinGW runtime DLLs
-          Copy-Item C:\msys64\mingw64\bin\libgcc_s_seh-1.dll release\
-          Copy-Item C:\msys64\mingw64\bin\libstdc++-6.dll release\
-          Copy-Item C:\msys64\mingw64\bin\libwinpthread-1.dll release\
+          $mingwBin = "C:\msys64\mingw64\bin"
+          $requiredDlls = @(
+            "libgcc_s_seh-1.dll",
+            "libstdc++-6.dll",
+            "libwinpthread-1.dll",
+            "libgomp-1.dll",
+            "zlib1.dll"
+          )
+
+          foreach ($dll in $requiredDlls) {
+            $dllPath = Join-Path $mingwBin $dll
+            if (Test-Path $dllPath) {
+              Copy-Item $dllPath release\ -ErrorAction SilentlyContinue
+            }
+          }
 
       - name: Create ZIP
         run: |
